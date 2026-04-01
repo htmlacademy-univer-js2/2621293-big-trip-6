@@ -5,4 +5,5 @@ const capitalizeFirstLetter = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-export { capitalizeFirstLetter };
+const getRandomArrayElement = (items) => items[Math.floor(Math.random() * items.length)];
+export { getRandomArrayElement, capitalizeFirstLetter };
