@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createPointTemplate(point, destination) {
   const { basePrice, type, isFavorite } = point;
@@ -26,29 +26,36 @@ function createPointTemplate(point, destination) {
             <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
           </svg>
         </button>
+        {/* ВОТ ЭТА КНОПКА БЫЛА ПРОПУЩЕНА: */}
+        <button class="event__rollup-btn" type="button">
+          <span class="visually-hidden">Open event</span>
+        </button>
       </div>
     </li>`
   );
 }
 
-export default class PointView {
-  constructor({point, destination}) {
-    this.point = point;
-    this.destination = destination;
+export default class PointView extends AbstractView {
+  #point = null;
+  #destination = null;
+  #handleEditClick = null;
+
+  constructor({point, destination, onEditClick}) {
+    super();
+    this.#point = point;
+    this.#destination = destination;
+    this.#handleEditClick = onEditClick;
+
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#editClickHandler);
   }
 
-  getTemplate() {
-    return createPointTemplate(this.point, this.destination);
+  get template() {
+    return createPointTemplate(this.#point, this.#destination);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #editClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleEditClick();
+  };
 }

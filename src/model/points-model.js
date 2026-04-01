@@ -1,19 +1,27 @@
 import { getRandomPoint, mockDestinations, mockOffers } from '../mock/points.js';
 
 export default class PointsModel {
-  points = Array.from({length: 3}, getRandomPoint);
-  destinations = mockDestinations;
-  offers = mockOffers;
+  #points = Array.from({length: 3}, getRandomPoint);
+  #destinations = mockDestinations;
+  #offers = mockOffers;
 
-  getPoints() {
-    return this.points;
+  get points() {
+    return this.#points;
   }
 
-  getDestinations() {
-    return this.destinations;
+  get destinations() {
+    return this.#destinations;
   }
 
-  getOffers() {
-    return this.offers;
+  get offers() {
+    return this.#offers;
+  }
+
+  getDestinationById(id) {
+    return this.#destinations.find((destination) => destination.id === id);
+  }
+
+  getOffersByType(type) {
+    return this.#offers.find((offer) => offer.type === type)?.offers || [];
   }
 }
