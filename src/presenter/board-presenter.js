@@ -1,37 +1,78 @@
-import { render } from '../render.js';
+import { render, replace } from '../framework/render.js';
 import EventListView from '../view/event-list-view.js';
-import SortView from '../view/sort-view.js';
 import PointView from '../view/point-view.js';
 import EditPointView from '../view/edit-point-view.js';
+import NoPointsView from '../view/no-points-view.js';
 
 export default class BoardPresenter {
-  eventListComponent = new EventListView();
+  #boardContainer = null;
+  #pointsModel = null;
+  #eventListComponent = new EventListView();
+  #boardPoints = [];
 
-  constructor({ boardContainer, pointsModel }) {
-    this.boardContainer = boardContainer;
-    this.pointsModel = pointsModel;
+  constructor({boardContainer, pointsModel}) {
+    this.#boardContainer = boardContainer;
+    this.#pointsModel = pointsModel;
   }
 
   init() {
-    this.boardPoints = [...this.pointsModel.getPoints()];
-    this.destinations = [...this.pointsModel.getDestinations()];
-    this.offers = [...this.pointsModel.getOffers()];
+    this.#boardPoints = [...this.#pointsModel.points];
+    this.#renderBoard();
+  }
 
-    render(new SortView(), this.boardContainer);
-    render(this.eventListComponent, this.boardContainer);
+  #renderPoint(point) {
+    const escKeyDownHandler = (evt) => {
+      if (evt.key === 'Escape' || evt.key === 'Esc') {
+        evt.preventDefault();
+        replaceFormToCard();
+        document.removeEventListener('keydown', escKeyDownHandler);
+      }
+    };
 
-    render(new EditPointView({
-      point: this.boardPoints[0],
-      destination: this.destinations.find((d) => d.id === this.boardPoints[0].destination),
-      offers: this.offers.find((o) => o.type === this.boardPoints[0].type).offers
-    }), this.eventListComponent.getElement());
+    const destination = this.#pointsModel.getDestinationById(point.destination);
+    const offers = this.#pointsModel.getOffersByType(point.type);
 
-    for (let i = 1; i < this.boardPoints.length; i++) {
-      const point = this.boardPoints[i];
-      const destination = this.destinations.find((d) => d.id === point.destination);
-      const pointOffers = this.offers.find((o) => o.type === point.type).offers;
+    const pointComponent = new PointView({
+      point,
+      destination,
+      onEditClick: () => {
+        replaceCardToForm();
+        document.addEventListener('keydown', escKeyDownHandler);
+      }
+    });
 
-      render(new PointView({ point, destination, offers: pointOffers }), this.eventListComponent.getElement());
+    const pointEditComponent = new EditPointView({
+      point,
+      destination,
+      offers,
+      onFormSubmit: () => {
+        replaceFormToCard();
+        document.removeEventListener('keydown', escKeyDownHandler);
+      },
+      onCloseClick: () => {
+        replaceFormToCard();
+        document.removeEventListener('keydown', escKeyDownHandler);
+      }
+    });
+
+    function replaceCardToForm() {
+      replace(pointEditComponent, pointComponent);
     }
+
+    function replaceFormToCard() {
+      replace(pointComponent, pointEditComponent);
+    }
+
+    render(pointComponent, this.#eventListComponent.element);
+  }
+
+  #renderBoard() {
+    if (this.#boardPoints.length === 0) {
+      render(new NoPointsView(), this.#boardContainer);
+      return;
+    }
+
+    render(this.#eventListComponent, this.#boardContainer);
+    this.#boardPoints.forEach((point) => this.#renderPoint(point));
   }
 }
